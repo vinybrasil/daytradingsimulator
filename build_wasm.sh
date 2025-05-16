@@ -1,4 +1,4 @@
-emcc -o build/main.html main.c \
+emcc -o build/index.html main.c \
  -Wall -std=c99 -D_DEFAULT_SOURCE -Wno-missing-braces \
   -Wunused-result -Os -I. -I /home/vinybrasil/projects/raylib/raylib/src \
    -I /home/vinybrasil/projects/raylib/raylib/src/external -L. -L /home/vinybrasil/projects/raylib/raylib/src \

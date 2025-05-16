@@ -3,6 +3,7 @@
 #define NUM_FRAMES 120
 #define SCREENWIDTH 800
 #define SCREENHEIGHT 450
+#define BASEOFFSET 30
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
@@ -53,43 +54,46 @@ void DrawGridManual(int width, int height, int cellSize, Color color) {
   }
 }
 
-void showtotalposition(double total_position, int offset_text_y_table) {
+void showtotalposition(double total_position, int offset_text_y_table,
+                       int font_size) {
   if (total_position > 0) {
-    DrawText(TextFormat("Total profit: %f", total_position), 600,
-             50 + 2 * offset_text_y_table, 20, GREEN);
+    DrawText(TextFormat("Total profit: %0.4f", total_position), 600,
+             BASEOFFSET + 2 * offset_text_y_table, font_size, DARKGREEN);
   } else if (total_position == 0) {
-    DrawText(TextFormat("Total profit: %f", total_position), 600,
-             50 + 2 * offset_text_y_table, 20, DARKGRAY);
+    DrawText(TextFormat("Total profit: %0.4f", total_position), 600,
+             BASEOFFSET + 2 * offset_text_y_table, font_size, DARKGRAY);
   } else {
-    DrawText(TextFormat("Total profit: %f", total_position), 600,
-             50 + 2 * offset_text_y_table, 20, RED);
+    DrawText(TextFormat("Total profit: %0.4f", total_position), 600,
+             BASEOFFSET + 2 * offset_text_y_table, font_size, RED);
   }
 }
 
-void showlastposition(double last_position, int offset_text_y_table) {
+void showlastposition(double last_position, int offset_text_y_table,
+                      int font_size) {
 
   if (last_position > 0) {
-    DrawText(TextFormat("Last profit: %f", last_position), 600,
-             50 + 3 * offset_text_y_table, 20, GREEN);
+    DrawText(TextFormat("Last profit: %0.4f", last_position), 600,
+             BASEOFFSET + 3 * offset_text_y_table, font_size, DARKGREEN);
   } else if (last_position == 0) {
-    DrawText(TextFormat("Last profit: %f", last_position), 600,
-             50 + 3 * offset_text_y_table, 20, DARKGRAY);
+    DrawText(TextFormat("Last profit: %0.4f", last_position), 600,
+             BASEOFFSET + 3 * offset_text_y_table, font_size, DARKGRAY);
   } else {
-    DrawText(TextFormat("Last profit: %f", last_position), 600,
-             50 + 3 * offset_text_y_table, 20, RED);
+    DrawText(TextFormat("Last profit: %0.4f", last_position), 600,
+             BASEOFFSET + 3 * offset_text_y_table, font_size, RED);
   }
 }
 
-void showcurrentposition(double current_position, int offset_text_y_table) {
+void showcurrentposition(double current_position, int offset_text_y_table,
+                         int font_size) {
   if (current_position > 0) {
-    DrawText(TextFormat("Current profit: %f", current_position), 600,
-             50 + 4 * offset_text_y_table, 20, GREEN);
+    DrawText(TextFormat("Current profit: %0.4f", current_position), 600,
+             BASEOFFSET + 4 * offset_text_y_table, font_size, DARKGREEN);
   } else if (current_position == 0) {
-    DrawText(TextFormat("Current profit: %f", current_position), 600,
-             50 + 4 * offset_text_y_table, 20, DARKGRAY);
+    DrawText(TextFormat("Current profit: %0.4f", current_position), 600,
+             BASEOFFSET + 4 * offset_text_y_table, font_size, DARKGRAY);
   } else {
-    DrawText(TextFormat("Current profit: %f", current_position), 600,
-             50 + 4 * offset_text_y_table, 20, RED);
+    DrawText(TextFormat("Current profit: %0.4f", current_position), 600,
+             BASEOFFSET + 4 * offset_text_y_table, font_size, RED);
   }
 }
 
@@ -112,7 +116,7 @@ int main() {
   const int end_screen = 600 - 20;
   const int frame_per_value = 5; // a cada dois frame muda o valor
   const int total_values_needed = end_screen;
-  const int offset_text_y_table = 50;
+  const int offset_text_y_table = 30;
   double price = 100.0;
   double prices[total_values_needed];
 
@@ -122,8 +126,6 @@ int main() {
   double increment_2;
   double increment_3;
   double increment_4;
-
-  // double screenheight_scaled = (double)SCREENHEIGHT;
 
   prices[0] = price;
 
@@ -156,7 +158,7 @@ int main() {
   double last_position = 0.0;
 
   double realtimeprofit;
-  int offset_text_line = 0;
+  const int offset_text_line = 10;
 
   Vector2 mousePoint = {0.0f, 0.0f};
 
@@ -166,6 +168,8 @@ int main() {
 
   int offset_text_x = 50;
   int offset_text_y = 20;
+
+  int font_size = 18;
 
   for (int i = 1; i < end_screen; i++) {
     mu = GetRandomNormalValue(0.0, 0.5);
@@ -187,7 +191,7 @@ int main() {
     }
   }
 
-  InitWindow(SCREENWIDTH, SCREENHEIGHT, "day trading simulator");
+  InitWindow(SCREENWIDTH, SCREENHEIGHT, "Day trading Simulator");
 
   SetTargetFPS(NUM_FRAMES);
 
@@ -300,10 +304,11 @@ int main() {
 
     drawball(0, GetScreenHeight() / 2, BLACK);
 
-    DrawText(TextFormat("CP: %f", prices[posx]), 600, 50, 20, DARKGRAY);
+    DrawText(TextFormat("Price: %0.4f", prices[posx]), 600, BASEOFFSET,
+             font_size, DARKGRAY);
 
-    DrawText(TextFormat("seed: %i", seed), 600, 50 + 1 * offset_text_y_table,
-             20, DARKGRAY);
+    DrawText(TextFormat("seed: %i", seed), 600,
+             BASEOFFSET + 1 * offset_text_y_table, font_size, DARKGRAY);
 
     DrawRectangle(btnBuyBounds.x, btnBuyBounds.y, btnBuyBounds.width,
                   btnBuyBounds.height, GREEN);
@@ -317,13 +322,13 @@ int main() {
              btnSellBounds.y + offset_text_y, 20, WHITE);
 
     DrawText(TextFormat("100"), 0, GetScreenHeight() / 2 - 20, 12, BLACK);
-    DrawText(TextFormat("%f", price), posx, posy - 20, 12, BLACK);
+    DrawText(TextFormat("%0.4f", price), posx, posy - 20, 12, BLACK);
 
-    showtotalposition(total_position, offset_text_y_table);
+    showtotalposition(total_position, offset_text_y_table, font_size);
 
-    showlastposition(last_position, offset_text_y_table);
+    showlastposition(last_position, offset_text_y_table, font_size);
 
-    showcurrentposition(current_position, offset_text_y_table);
+    showcurrentposition(current_position, offset_text_y_table, font_size);
 
     if (qnt_buys == qnt_sells) {
       for (int i = 0; i < qnt_buys; i++) {
@@ -333,13 +338,13 @@ int main() {
         realtimeprofit = -(pricesbought[i] - pricesells[i]);
 
         if (realtimeprofit >= 0) {
-          DrawText(TextFormat("+%f", realtimeprofit),
+          DrawText(TextFormat("+%0.4f", realtimeprofit),
                    (timesells[i] + timebought[i]) / 2,
                    scale((pricesbought[i] + pricesells[i]) / 2.0) -
                        offset_text_line,
                    20, DARKGREEN);
         } else {
-          DrawText(TextFormat("%f", realtimeprofit),
+          DrawText(TextFormat("%0.4f", realtimeprofit),
                    (timesells[i] + timebought[i]) / 2,
                    scale((pricesbought[i] + pricesells[i]) / 2.0) -
                        offset_text_line,
@@ -368,15 +373,15 @@ int main() {
         realtimeprofit = -(pricesbought[i] - pricesells[i]);
 
         if (realtimeprofit >= 0) {
-          DrawText(TextFormat("+%f", realtimeprofit),
+          DrawText(TextFormat("+%0.4f", realtimeprofit),
                    (timesells[i] + timebought[i]) / 2,
-                   scale((pricesbought[i] + (int)pricesells[i]) / 2) -
+                   scale((pricesbought[i] + pricesells[i]) / 2) -
                        offset_text_line,
                    20, DARKGREEN);
         } else {
-          DrawText(TextFormat("%f", realtimeprofit),
+          DrawText(TextFormat("%0.4f", realtimeprofit),
                    (timesells[i] + timebought[i]) / 2,
-                   scale((pricesbought[i] + (int)pricesells[i]) / 2) -
+                   scale((pricesbought[i] + pricesells[i]) / 2) -
                        offset_text_line,
 
                    20, RED);
@@ -394,13 +399,13 @@ int main() {
                posx, posy, BLACK);
 
       if (realtimeprofit >= 0) {
-        DrawText(TextFormat("+%f", realtimeprofit),
+        DrawText(TextFormat("+%0.4f", realtimeprofit),
                  (posx + timebought[qnt_buys - 1]) / 2,
                  scale((pricesbought[qnt_buys - 1] + price) / 2) -
                      offset_text_line,
                  20, DARKGREEN);
       } else {
-        DrawText(TextFormat("%f", realtimeprofit),
+        DrawText(TextFormat("%0.4f", realtimeprofit),
                  (posx + timebought[qnt_buys - 1]) / 2,
                  scale((pricesbought[qnt_buys - 1] + price) / 2) -
                      offset_text_line,
@@ -416,13 +421,13 @@ int main() {
         realtimeprofit = -(pricesbought[i] - pricesells[i]);
 
         if (realtimeprofit >= 0) {
-          DrawText(TextFormat("+%f", realtimeprofit),
+          DrawText(TextFormat("+%0.4f", realtimeprofit),
                    (timesells[i] + timebought[i]) / 2,
                    scale((pricesbought[i] + pricesells[i]) / 2) -
                        offset_text_line,
                    20, DARKGREEN);
         } else {
-          DrawText(TextFormat("%f", realtimeprofit),
+          DrawText(TextFormat("%0.4f", realtimeprofit),
                    (timesells[i] + timebought[i]) / 2,
                    scale((pricesbought[i] + pricesells[i]) / 2) -
                        offset_text_line,
@@ -435,14 +440,14 @@ int main() {
       realtimeprofit = -(price - pricesells[qnt_sells - 1]);
 
       if (realtimeprofit >= 0) {
-        DrawText(TextFormat("+%f", realtimeprofit),
+        DrawText(TextFormat("+%0.4f", realtimeprofit),
                  (timesells[qnt_sells - 1] + posx) / 2,
                  scale((price + pricesells[qnt_sells - 1]) / 2) -
                      offset_text_line,
 
                  20, DARKGREEN);
       } else {
-        DrawText(TextFormat("%f", realtimeprofit),
+        DrawText(TextFormat("%0.4f", realtimeprofit),
                  (timesells[qnt_sells - 1] + posx) / 2,
                  scale((price + pricesells[qnt_sells - 1]) / 2) -
                      offset_text_line,
