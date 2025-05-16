@@ -1,9 +1,10 @@
 #include "raylib.h"
 
-#define NUM_FRAMES 120
+#define NUM_FRAMES 1200
 #define SCREENWIDTH 800
 #define SCREENHEIGHT 450
 #define BASEOFFSET 30
+#define TEXTSCREENHEIGHT 150
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
@@ -23,23 +24,73 @@ float GetRandomNormalValue(float mean, float stddev) {
 
 void drawball(int x, int y, Color color) { DrawCircle(x, y, 5, color); }
 
+void startscreenscreen() {
+  DrawRectangle(0, 100, 800, 200, BLACK);
+
+  // DrawText(TextFormat("DAY TRADING SIMULATOR"), 40, 180, 30, GREEN);
+  DrawText(TextFormat("DAY TRADING SIMULATOR"), 180, TEXTSCREENHEIGHT, 30,
+           WHITE);
+
+  DrawRectangle(200, TEXTSCREENHEIGHT + 40 + 30, 100, 40, GREEN);
+  DrawText(TextFormat("PLAY"), 210, TEXTSCREENHEIGHT + 75, 30, WHITE);
+
+  DrawRectangle(310, TEXTSCREENHEIGHT + 40 + 30, 240, 40, GREEN);
+  DrawText(TextFormat("HOW TO PLAY"), 320, TEXTSCREENHEIGHT + 75, 30, WHITE);
+}
+
+void howtoplayscreen() {
+  DrawRectangle(0, 100, 800, 200, BLACK);
+
+  // DrawText(TextFormat("DAY TRADING SIMULATOR"), 40, 180, 30, GREEN);
+  // DrawText(TextFormat("DAY TRADING SIMULATOR"), 180, TEXTSCREENHEIGHT, 30,
+  //          WHITE);
+
+  // DrawRectangle(200, TEXTSCREENHEIGHT + 40 + 30, 100, 40, GREEN);
+  // DrawText(TextFormat("PLAY"), 210, TEXTSCREENHEIGHT + 75, 30, WHITE);
+
+  DrawText(
+      TextFormat("You can buy or sell the stock. \nIf you buy and then sell, "
+                 "the profit is the price of the buy minus\nthe price of the "
+                 "sell. \nIf you sell and then buy, the profit is the negative "
+                 "of price of the buy\nminus the price of the sell.\nThe total "
+                 "profit is the sum of all the trades."),
+      40, 150, 20, WHITE);
+
+  DrawRectangle(585, TEXTSCREENHEIGHT + 40 + 55, 140, 40, RED);
+  DrawText(TextFormat("<BACK"), 580 + 25, TEXTSCREENHEIGHT + 40 + 60, 30,
+           WHITE);
+}
+
 void endscreenscreen(double total_position) {
   DrawRectangle(0, 100, 800, 200, BLACK);
+
+  Color cor;
+  const char *text;
+
   if (total_position >= 0) {
-    DrawText(TextFormat("GAME OVER\nTOTAL PROFIT: +%f\nTry again? [Y|N]",
-                        total_position),
-             40, 180, 30, GREEN);
+
+    cor = GREEN;
+    text = TextFormat("TOTAL PROFIT: +%0.4f", total_position);
+
   } else {
-    DrawText(TextFormat("GAME OVER\nTOTAL PROFIT: %f\nTry again? [Y|N]",
-                        total_position),
-             40, 180, 30, RED);
+
+    cor = RED;
+
+    text = TextFormat("TOTAL PROFIT: %0.4f", total_position);
   }
+
+  DrawText(TextFormat("GAME OVER"), 300, TEXTSCREENHEIGHT, 30, WHITE);
+
+  DrawText(text, 180, TEXTSCREENHEIGHT + 30, 30, cor);
+
+  DrawRectangle(270, TEXTSCREENHEIGHT + 40 + 30, 240, 40, GREEN);
+  DrawText(TextFormat("PLAY AGAIN"), 300, TEXTSCREENHEIGHT + 75, 30, WHITE);
 }
 
 int scale(double x) {
   double screenheight_scaled = (double)SCREENHEIGHT;
   return SCREENHEIGHT -
-         (int)(screenheight_scaled * ((x - 98.0) / (102.0 - 98.0)));
+         (int)(screenheight_scaled * ((x - 98.5) / (101.5 - 98.5)));
 }
 
 void DrawGridManual(int width, int height, int cellSize, Color color) {
@@ -56,6 +107,7 @@ void DrawGridManual(int width, int height, int cellSize, Color color) {
 
 void showtotalposition(double total_position, int offset_text_y_table,
                        int font_size) {
+
   if (total_position > 0) {
     DrawText(TextFormat("Total profit: %0.4f", total_position), 600,
              BASEOFFSET + 2 * offset_text_y_table, font_size, DARKGREEN);
@@ -105,6 +157,12 @@ int main() {
   unsigned int seed = (unsigned int)time(NULL);
   SetRandomSeed(seed);
 
+  typedef enum {
+    SCREEN_START,
+    SCREEN_HOWTOPLAY,
+    SCREEN_GAME,
+  } GameScreen;
+
   int t = 0;
   int posx = 0;
   int posy;
@@ -138,6 +196,10 @@ int main() {
 
   bool btnBuyAction = false;
   bool btnSellAction = false;
+  bool btnPlayAgainAction = false;
+  bool btnPlayAction = false;
+  bool btnHowToPlayAction = false;
+  bool btnbackaction = false;
 
   int timebought[30];
   double pricesbought[30];
@@ -165,6 +227,10 @@ int main() {
   int height = 60;
   Rectangle btnBuyBounds = {600, 300, 170, height};
   Rectangle btnSellBounds = {600, 300 + height, 170, height};
+  Rectangle btnPlayAgainBounds = {270, TEXTSCREENHEIGHT + 40 + 30, 240, 40};
+  Rectangle btnPlay = {200, TEXTSCREENHEIGHT + 40 + 30, 100, 40};
+  Rectangle btnHowToPlay = {310, TEXTSCREENHEIGHT + 40 + 30, 240, 40};
+  Rectangle btnback = {585, TEXTSCREENHEIGHT + 40 + 55, 140, 40};
 
   int offset_text_x = 50;
   int offset_text_y = 20;
@@ -173,11 +239,11 @@ int main() {
 
   for (int i = 1; i < end_screen; i++) {
     mu = GetRandomNormalValue(0.0, 0.5);
-    randValue = GetRandomNormalValue(0.0, sqrt(dt));
+    randValue = GetRandomNormalValue(0.0, 1.0);
 
     increment_1 = mu - (0.5 * sigma * sigma);
     increment_2 = increment_1 * dt;
-    increment_3 = increment_2 + sigma * randValue;
+    increment_3 = increment_2 + sigma * randValue * sqrt(dt);
     increment_4 = exp(increment_3);
 
     prices[i] = prices[i - 1] * increment_4;
@@ -195,11 +261,15 @@ int main() {
 
   SetTargetFPS(NUM_FRAMES);
 
+  GameScreen currentScreen = SCREEN_START;
+
   while (!WindowShouldClose()) {
 
     mousePoint = GetMousePosition();
     btnBuyAction = false;
     btnSellAction = false;
+    btnPlayAgainAction = false;
+    btnHowToPlayAction = false;
 
     if (CheckCollisionPointRec(mousePoint, btnBuyBounds)) {
 
@@ -229,6 +299,54 @@ int main() {
     // else
     //   btnSellState = 0;
 
+    if (CheckCollisionPointRec(mousePoint, btnPlayAgainBounds)) {
+
+      //   if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+      //     btnSellState = 2;
+      //   else
+      //     btnSellState = 1;
+
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        btnPlayAgainAction = true;
+      }
+    }
+
+    if (CheckCollisionPointRec(mousePoint, btnPlay)) {
+
+      //   if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+      //     btnSellState = 2;
+      //   else
+      //     btnSellState = 1;
+
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        btnPlayAction = true;
+      }
+    }
+
+    if (CheckCollisionPointRec(mousePoint, btnHowToPlay)) {
+
+      //   if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+      //     btnSellState = 2;
+      //   else
+      //     btnSellState = 1;
+
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        btnHowToPlayAction = true;
+      }
+    }
+
+    if (CheckCollisionPointRec(mousePoint, btnback) &&
+        (currentScreen == SCREEN_HOWTOPLAY)) {
+
+      //   if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+      //     btnSellState = 2;
+      //   else
+      //     btnSellState = 1;
+
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        btnbackaction = true;
+      }
+    }
     if (btnBuyAction && (!currentlyBought)) {
 
       pricesbought[qnt_buys] = price;
@@ -281,220 +399,264 @@ int main() {
       current_position = 0.0;
     }
 
+    if (currentScreen == SCREEN_START) {
+      // Check for button press to move to next screen
+      // btnbackaction = false;
+      if (btnPlayAction) {
+        currentScreen = SCREEN_GAME;
+        btnPlayAction = true;
+      }
+
+      if (btnHowToPlayAction) {
+        currentScreen = SCREEN_HOWTOPLAY;
+        // btnPlayAction = true;
+      }
+    }
+
+    if (currentScreen == SCREEN_HOWTOPLAY) {
+      if (btnbackaction) {
+        currentScreen = SCREEN_START;
+        btnbackaction = false;
+      }
+    }
+
     BeginDrawing();
 
-    ClearBackground(RAYWHITE);
+    switch (currentScreen) {
+    case SCREEN_START:
 
-    DrawGridManual(SCREENWIDTH, SCREENHEIGHT, 20, LIGHTGRAY);
+      ClearBackground(RAYWHITE);
+      startscreenscreen();
+      break;
 
-    posy = scale(price);
+    case SCREEN_HOWTOPLAY:
 
-    DrawRectangle(580, 0, 220, SCREENHEIGHT, WHITE);
+      ClearBackground(RAYWHITE);
+      howtoplayscreen();
+      break;
 
-    for (int i = 1; i < posx; i++) {
+    case SCREEN_GAME:
 
-      posy_p1 = scale(prices[i]);
+      ClearBackground(RAYWHITE);
 
-      posy_p0 = scale(prices[i - 1]);
+      DrawGridManual(SCREENWIDTH, SCREENHEIGHT, 20, LIGHTGRAY);
 
-      DrawLine(i - 1, posy_p0, i, posy_p1, BLUE);
-    }
+      posy = scale(price);
 
-    drawball(posx, posy, BLACK);
+      DrawRectangle(580, 0, 220, SCREENHEIGHT, WHITE);
 
-    drawball(0, GetScreenHeight() / 2, BLACK);
+      for (int i = 1; i < posx; i++) {
 
-    DrawText(TextFormat("Price: %0.4f", prices[posx]), 600, BASEOFFSET,
-             font_size, DARKGRAY);
+        posy_p1 = scale(prices[i]);
 
-    DrawText(TextFormat("seed: %i", seed), 600,
-             BASEOFFSET + 1 * offset_text_y_table, font_size, DARKGRAY);
+        posy_p0 = scale(prices[i - 1]);
 
-    DrawRectangle(btnBuyBounds.x, btnBuyBounds.y, btnBuyBounds.width,
-                  btnBuyBounds.height, GREEN);
+        DrawLine(i - 1, posy_p0, i, posy_p1, BLUE);
+      }
 
-    DrawRectangle(btnSellBounds.x, btnSellBounds.y, btnSellBounds.width,
-                  btnSellBounds.height, RED);
+      drawball(posx, posy, BLACK);
 
-    DrawText("BUY", btnBuyBounds.x + offset_text_x,
-             btnBuyBounds.y + offset_text_y, 20, WHITE);
-    DrawText("SELL", btnSellBounds.x + offset_text_x,
-             btnSellBounds.y + offset_text_y, 20, WHITE);
+      drawball(0, GetScreenHeight() / 2, BLACK);
 
-    DrawText(TextFormat("100"), 0, GetScreenHeight() / 2 - 20, 12, BLACK);
-    DrawText(TextFormat("%0.4f", price), posx, posy - 20, 12, BLACK);
+      DrawText(TextFormat("Price: %0.4f", prices[posx]), 600, BASEOFFSET,
+               font_size, DARKGRAY);
 
-    showtotalposition(total_position, offset_text_y_table, font_size);
+      DrawText(TextFormat("seed: %i", seed), 600,
+               BASEOFFSET + 1 * offset_text_y_table, font_size, DARKGRAY);
 
-    showlastposition(last_position, offset_text_y_table, font_size);
+      DrawRectangle(btnBuyBounds.x, btnBuyBounds.y, btnBuyBounds.width,
+                    btnBuyBounds.height, GREEN);
 
-    showcurrentposition(current_position, offset_text_y_table, font_size);
+      DrawRectangle(btnSellBounds.x, btnSellBounds.y, btnSellBounds.width,
+                    btnSellBounds.height, RED);
 
-    if (qnt_buys == qnt_sells) {
-      for (int i = 0; i < qnt_buys; i++) {
-        DrawLine(timebought[i], scale(pricesbought[i]), timesells[i],
-                 scale(pricesells[i]), BLACK);
+      DrawText("BUY", btnBuyBounds.x + offset_text_x,
+               btnBuyBounds.y + offset_text_y, 20, WHITE);
+      DrawText("SELL", btnSellBounds.x + offset_text_x,
+               btnSellBounds.y + offset_text_y, 20, WHITE);
 
-        realtimeprofit = -(pricesbought[i] - pricesells[i]);
+      DrawText(TextFormat("100"), 0, GetScreenHeight() / 2 - 20, 12, BLACK);
+      DrawText(TextFormat("%0.4f", price), posx, posy - 20, 12, BLACK);
+
+      showtotalposition(total_position, offset_text_y_table, font_size);
+
+      showlastposition(last_position, offset_text_y_table, font_size);
+
+      showcurrentposition(current_position, offset_text_y_table, font_size);
+
+      if (qnt_buys == qnt_sells) {
+        for (int i = 0; i < qnt_buys; i++) {
+          DrawLine(timebought[i], scale(pricesbought[i]), timesells[i],
+                   scale(pricesells[i]), BLACK);
+
+          realtimeprofit = -(pricesbought[i] - pricesells[i]);
+
+          if (realtimeprofit >= 0) {
+            DrawText(TextFormat("+%0.4f", realtimeprofit),
+                     (timesells[i] + timebought[i]) / 2,
+                     scale((pricesbought[i] + pricesells[i]) / 2.0) -
+                         offset_text_line,
+                     20, DARKGREEN);
+          } else {
+            DrawText(TextFormat("%0.4f", realtimeprofit),
+                     (timesells[i] + timebought[i]) / 2,
+                     scale((pricesbought[i] + pricesells[i]) / 2.0) -
+                         offset_text_line,
+                     20, RED);
+          }
+        }
+      }
+
+      if (qnt_buys > 0) {
+        for (int j = 0; j < qnt_buys; j++) {
+          DrawCircle(timebought[j], scale(pricesbought[j]), 5, GREEN);
+        }
+      }
+
+      if (qnt_sells > 0) {
+        for (int k = 0; k < qnt_sells; k++) {
+          DrawCircle(timesells[k], scale(pricesells[k]), 5, RED);
+        }
+      }
+
+      if (qnt_buys > qnt_sells) {
+        for (int i = 0; i < qnt_sells; i++) {
+          DrawLine(timebought[i], scale(pricesbought[i]), timesells[i],
+                   scale(pricesells[i]), BLACK);
+
+          realtimeprofit = -(pricesbought[i] - pricesells[i]);
+
+          if (realtimeprofit >= 0) {
+            DrawText(TextFormat("+%0.4f", realtimeprofit),
+                     (timesells[i] + timebought[i]) / 2,
+                     scale((pricesbought[i] + pricesells[i]) / 2) -
+                         offset_text_line,
+                     20, DARKGREEN);
+          } else {
+            DrawText(TextFormat("%0.4f", realtimeprofit),
+                     (timesells[i] + timebought[i]) / 2,
+                     scale((pricesbought[i] + pricesells[i]) / 2) -
+                         offset_text_line,
+
+                     20, RED);
+          }
+        }
+
+        // realtimeprofit = -(pricesbought[qnt_buys - 1] - price);
+
+        realtimeprofit = -(pricesbought[qnt_buys - 1] - price);
+
+        DrawLine(timebought[qnt_buys - 1],
+
+                 scale(pricesbought[qnt_buys - 1]),
+
+                 posx, posy, BLACK);
 
         if (realtimeprofit >= 0) {
           DrawText(TextFormat("+%0.4f", realtimeprofit),
-                   (timesells[i] + timebought[i]) / 2,
-                   scale((pricesbought[i] + pricesells[i]) / 2.0) -
+                   (posx + timebought[qnt_buys - 1]) / 2,
+                   scale((pricesbought[qnt_buys - 1] + price) / 2) -
                        offset_text_line,
                    20, DARKGREEN);
         } else {
           DrawText(TextFormat("%0.4f", realtimeprofit),
-                   (timesells[i] + timebought[i]) / 2,
-                   scale((pricesbought[i] + pricesells[i]) / 2.0) -
+                   (posx + timebought[qnt_buys - 1]) / 2,
+                   scale((pricesbought[qnt_buys - 1] + price) / 2) -
                        offset_text_line,
                    20, RED);
         }
       }
-    }
 
-    if (qnt_buys > 0) {
-      for (int j = 0; j < qnt_buys; j++) {
-        DrawCircle(timebought[j], scale(pricesbought[j]), 5, GREEN);
-      }
-    }
+      if (qnt_buys < qnt_sells) {
+        for (int i = 0; i < qnt_buys; i++) {
+          DrawLine(timebought[i], scale(pricesbought[i]), timesells[i],
+                   scale(pricesells[i]), BLACK);
 
-    if (qnt_sells > 0) {
-      for (int k = 0; k < qnt_sells; k++) {
-        DrawCircle(timesells[k], scale(pricesells[k]), 5, RED);
-      }
-    }
+          realtimeprofit = -(pricesbought[i] - pricesells[i]);
 
-    if (qnt_buys > qnt_sells) {
-      for (int i = 0; i < qnt_sells; i++) {
-        DrawLine(timebought[i], scale(pricesbought[i]), timesells[i],
-                 scale(pricesells[i]), BLACK);
+          if (realtimeprofit >= 0) {
+            DrawText(TextFormat("+%0.4f", realtimeprofit),
+                     (timesells[i] + timebought[i]) / 2,
+                     scale((pricesbought[i] + pricesells[i]) / 2) -
+                         offset_text_line,
+                     20, DARKGREEN);
+          } else {
+            DrawText(TextFormat("%0.4f", realtimeprofit),
+                     (timesells[i] + timebought[i]) / 2,
+                     scale((pricesbought[i] + pricesells[i]) / 2) -
+                         offset_text_line,
+                     20, RED);
+          }
+        }
+        DrawLine(timesells[qnt_sells - 1], scale(pricesells[qnt_sells - 1]),
+                 posx, posy, BLACK);
 
-        realtimeprofit = -(pricesbought[i] - pricesells[i]);
+        realtimeprofit = -(price - pricesells[qnt_sells - 1]);
 
         if (realtimeprofit >= 0) {
           DrawText(TextFormat("+%0.4f", realtimeprofit),
-                   (timesells[i] + timebought[i]) / 2,
-                   scale((pricesbought[i] + pricesells[i]) / 2) -
+                   (timesells[qnt_sells - 1] + posx) / 2,
+                   scale((price + pricesells[qnt_sells - 1]) / 2) -
                        offset_text_line,
+
                    20, DARKGREEN);
         } else {
           DrawText(TextFormat("%0.4f", realtimeprofit),
-                   (timesells[i] + timebought[i]) / 2,
-                   scale((pricesbought[i] + pricesells[i]) / 2) -
+                   (timesells[qnt_sells - 1] + posx) / 2,
+                   scale((price + pricesells[qnt_sells - 1]) / 2) -
                        offset_text_line,
 
                    20, RED);
         }
       }
 
-      // realtimeprofit = -(pricesbought[qnt_buys - 1] - price);
+      if (game_end) {
 
-      realtimeprofit = -(pricesbought[qnt_buys - 1] - price);
+        endscreenscreen(total_position);
 
-      DrawLine(timebought[qnt_buys - 1],
+        if (btnPlayAgainAction) {
+          t = 0;
+          price = 100.0;
+          prices[0] = 100.0;
 
-               scale(pricesbought[qnt_buys - 1]),
+          total_position = 0;
+          current_position = 0;
+          last_position = 0;
 
-               posx, posy, BLACK);
+          priceBuy = 0.0;
+          priceSell = 0.0;
 
-      if (realtimeprofit >= 0) {
-        DrawText(TextFormat("+%0.4f", realtimeprofit),
-                 (posx + timebought[qnt_buys - 1]) / 2,
-                 scale((pricesbought[qnt_buys - 1] + price) / 2) -
-                     offset_text_line,
-                 20, DARKGREEN);
-      } else {
-        DrawText(TextFormat("%0.4f", realtimeprofit),
-                 (posx + timebought[qnt_buys - 1]) / 2,
-                 scale((pricesbought[qnt_buys - 1] + price) / 2) -
-                     offset_text_line,
-                 20, RED);
-      }
-    }
+          posx = 0;
 
-    if (qnt_buys < qnt_sells) {
-      for (int i = 0; i < qnt_buys; i++) {
-        DrawLine(timebought[i], scale(pricesbought[i]), timesells[i],
-                 scale(pricesells[i]), BLACK);
+          currentlyBought = false;
+          currentlySelled = false;
 
-        realtimeprofit = -(pricesbought[i] - pricesells[i]);
+          qnt_buys = 0;
+          qnt_sells = 0;
+          game_end = false;
 
-        if (realtimeprofit >= 0) {
-          DrawText(TextFormat("+%0.4f", realtimeprofit),
-                   (timesells[i] + timebought[i]) / 2,
-                   scale((pricesbought[i] + pricesells[i]) / 2) -
-                       offset_text_line,
-                   20, DARKGREEN);
-        } else {
-          DrawText(TextFormat("%0.4f", realtimeprofit),
-                   (timesells[i] + timebought[i]) / 2,
-                   scale((pricesbought[i] + pricesells[i]) / 2) -
-                       offset_text_line,
-                   20, RED);
+          btnPlayAgainAction = false;
         }
       }
-      DrawLine(timesells[qnt_sells - 1], scale(pricesells[qnt_sells - 1]), posx,
-               posy, BLACK);
 
-      realtimeprofit = -(price - pricesells[qnt_sells - 1]);
-
-      if (realtimeprofit >= 0) {
-        DrawText(TextFormat("+%0.4f", realtimeprofit),
-                 (timesells[qnt_sells - 1] + posx) / 2,
-                 scale((price + pricesells[qnt_sells - 1]) / 2) -
-                     offset_text_line,
-
-                 20, DARKGREEN);
-      } else {
-        DrawText(TextFormat("%0.4f", realtimeprofit),
-                 (timesells[qnt_sells - 1] + posx) / 2,
-                 scale((price + pricesells[qnt_sells - 1]) / 2) -
-                     offset_text_line,
-
-                 20, RED);
-      }
+      break;
     }
 
-    if (game_end) {
-
-      endscreenscreen(total_position);
-
-      if (IsKeyPressed(KEY_Y)) {
-        t = 0;
-        price = 100.0;
-        prices[0] = 100.0;
-
-        total_position = 0;
-        current_position = 0;
-        last_position = 0;
-
-        priceBuy = 0.0;
-        priceSell = 0.0;
-
-        posx = 0;
-
-        currentlyBought = false;
-        currentlySelled = false;
-
-        qnt_buys = 0;
-        qnt_sells = 0;
-        game_end = false;
-      }
-    }
     EndDrawing();
 
-    t += 1;
+    if (btnPlayAction) {
+      t += 1;
 
-    if (!game_end) {
-      if (t % frame_per_value == 0) {
-        posx += 1;
-        price = prices[posx];
+      if (!game_end) {
+        if (t % frame_per_value == 0) {
+          posx += 1;
+          price = prices[posx];
+        }
       }
-    }
 
-    if (posx == end_screen) {
-      game_end = true;
+      if (posx == end_screen) {
+        game_end = true;
+      }
     }
   }
 
